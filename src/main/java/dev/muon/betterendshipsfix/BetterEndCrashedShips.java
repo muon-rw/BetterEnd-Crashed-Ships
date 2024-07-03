@@ -11,7 +11,6 @@ public class BetterEndCrashedShips implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-
-		LOGGER.info("Hello Fabric world!");
+		LOGGER.info("Applying Betterend Crashed Ship Tweaks");
 	}
 }
