@@ -1,6 +1,8 @@
 package dev.muon.betterendshipsfix.mixin;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
@@ -11,6 +13,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.storage.loot.LootTable;
 import org.betterx.betterend.blocks.entities.PedestalBlockEntity;
 import org.betterx.betterend.registry.EndBlocks;
 import org.betterx.betterend.world.features.CrashedShipFeature;
@@ -23,13 +26,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(CrashedShipFeature.class)
 public abstract class CrashedShipFeatureMixin {
-
-	@Inject(method = "canSpawn", at = @At("HEAD"), cancellable = true)
-	private void chanceDiscardFeature(WorldGenLevel world, BlockPos pos, RandomSource random, CallbackInfoReturnable<Boolean> cir) {
-		if (random.nextInt(2) != 0) {
-			cir.setReturnValue(false);
-		}
-	}
 	@Inject(method = "place(Lnet/minecraft/world/level/levelgen/feature/FeaturePlaceContext;)Z",
 			at = @At(value = "RETURN"),
 			locals = LocalCapture.CAPTURE_FAILEXCEPTION)
@@ -43,7 +39,9 @@ public abstract class CrashedShipFeatureMixin {
 						((ChestBlockEntity) te).setLootTable(END_CITY_TREASURE, random.nextLong());
 					}
 				} else if (world.getBlockState(pos).getBlock() == EndBlocks.PURPUR_PEDESTAL) {
-					placeDamagedElytra(world, pos, random);
+					if (random.nextInt(1) == 1) {
+						placeDamagedElytra(world, pos, random);
+					}
 				}
 			}
 		}
@@ -51,12 +49,12 @@ public abstract class CrashedShipFeatureMixin {
 	@Unique
 	private void placeDamagedElytra(WorldGenLevel world, BlockPos pos, RandomSource random) {
 		ItemStack elytra = new ItemStack(Items.ELYTRA);
-		elytra.setDamageValue(random.nextInt(432)); // Random damage between 0 and 431
+		elytra.setDamageValue(random.nextInt(432));
 		BlockEntity te = world.getBlockEntity(pos);
 		if (te instanceof PedestalBlockEntity) {
 			((PedestalBlockEntity) te).setItem(1, elytra);
 		}
 	}
 	@Unique
-	private static final ResourceLocation END_CITY_TREASURE = new ResourceLocation("minecraft", "chests/end_city_treasure");
+	private static final ResourceKey<LootTable> END_CITY_TREASURE = ResourceKey.create(Registries.LOOT_TABLE, ResourceLocation.withDefaultNamespace("chests/end_city_treasure"));
 }

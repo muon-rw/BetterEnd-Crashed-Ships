@@ -1,6 +1,8 @@
 plugins {
 	id 'fabric-loom' version '1.6-SNAPSHOT'
 	id 'maven-publish'
+	id "com.modrinth.minotaur" version "2.+"
+	id 'net.darkhax.curseforgegradle' version "1.1.16"
 }
 
 version = project.mod_version
@@ -24,21 +26,25 @@ repositories {
 			includeGroup "maven.modrinth"
 		}
 	}
+	maven { url "https://cursemaven.com" }
 }
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings loom.layered() {
 		officialMojangMappings()
-		parchment("org.parchmentmc.data:parchment-1.20.1:2023.09.03@zip")
+		parchment("org.parchmentmc.data:parchment-1.21:2024.07.07@zip")
 	}
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	//modImplementation("maven.modrinth:betterend:${project.betterend_version}")
+	// I don't want to deal with this :tm:
 	modImplementation fileTree(dir: '/libs/', include: '*.jar')
-	modImplementation "com.github.quiqueck:BCLib:${project.bclib_version}"
-	modImplementation "com.github.quiqueck:WunderLib:${project.wunderlib_version}"
+
+	//modImplementation "com.github.quiqueck:WunderLib:${project.wunderlib_version}"
+	//modImplementation("maven.modrinth:betterend:${project.betterend_version}")
+	//modImplementation "com.github.quiqueck:BCLib:${project.bclib_version}"
+	//modImplementation "com.github.quiqueck:WunderLib:${project.wunderlib_version}"
 
 }
 
@@ -86,4 +92,22 @@ publishing {
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
 	}
+}
+
+task publishCurseForge(type: net.darkhax.curseforgegradle.TaskPublishCurseForge) {
+	apiToken = System.getenv("CF_TOKEN")
+	//debugMode = true
+	def mainFile = upload(924809, remapJar)
+	mainFile.changelog = new File("$project.rootDir/changelog.md").getText('UTF-8')
+	mainFile.changelogType = "markdown"
+	mainFile.releaseType = "release"
+	mainFile.addGameVersion("1.21")
+	mainFile.addModLoader("fabric")
+	mainFile.displayName = project.archives_base_name + "-" + project.version
+	mainFile.addRequirement("zenith")
+	mainFile.addRequirement("spell-engine")
+	mainFile.addOptional("better-combat-by-daedelus")
+	mainFile.addOptional("paladins-and-priests")
+	mainFile.addOptional("wizards")
+	mainFile.addOptional("jewelry")
 }
